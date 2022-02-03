@@ -1,0 +1,109 @@
+version: v1beta11
+
+vars:
+  # k3d
+  - name: K3D_CLUSTER_NAME
+    value: edgefarm-core
+  - name: K3D_CONFIG
+    command: echo $(pwd)/dev/k3d-config.yaml
+  - name: K3D_EXTRA_ARGS
+    value: --volume $HOME/.devspace/certs/:/etc/self-ssl/@server:*
+
+  # kubeedge certificates
+  - name: KUBEEDGE_CA_NAME
+    value: kubeedge
+  - name: KUBEEDGE_CA_SECRET
+    value: kubeedge-ca
+  - name: KUBEEDGE_CA_SECRET_NS
+    value: kubeedge
+
+  - name: HOST_IP
+    question: What is the IP address of your host? (Prefer tailscale IP if available; run `tailscale ip -4`)?
+    default: "127.0.0.1"
+
+  - name: PWD
+    command: pwd
+
+dependencies:
+  - name: k3d
+    source:
+      git: https://github.com/edgefarm/devspace.base
+      subPath: /environments/k3d
+      branch: base-dependencies
+    vars:
+      - name: K3D_CLUSTER_NAME
+        value: ${K3D_CLUSTER_NAME}
+      - name: K3D_CONFIG
+        value: ${K3D_CONFIG}
+      - name: K3D_EXTRA_ARGS
+        value: ${K3D_EXTRA_ARGS}
+
+  - name: olm
+    source:
+      git: https://github.com/edgefarm/devspace.base
+      subPath: /environments/olm
+      branch: base-dependencies
+
+  - name: ingress
+    source:
+      git: https://github.com/edgefarm/devspace.base
+      subPath: /environments/ingress
+      branch: base-dependencies
+
+  - name: mkcert
+    source:
+      git: https://github.com/edgefarm/devspace.base
+      subPath: /environments/mkcert
+      branch: base-dependencies
+
+commands:
+  - name: init
+    command: |-
+      devspace run update
+      devspace run k3d.init
+      devspace run ingress.init
+      devspace run init-kubeedge-ca
+
+  - name: purge
+    command: |-
+      devspace run k3d.purge
+
+  - name: activate
+    command: |-
+      devspace run k3d.activate
+
+  - name: update
+    command: |-
+      devspace update dependencies
+
+  - name: init-kubeedge-ca
+    command: |-
+      devspace run mkcert.init-ca ${KUBEEDGE_CA_NAME}
+      kubectl get ns ${KUBEEDGE_CA_SECRET_NS} &>/dev/null || kubectl create ns ${KUBEEDGE_CA_SECRET_NS}
+      echo "devspace run mkcert.create-ca-secret ${KUBEEDGE_CA_NAME} ${KUBEEDGE_CA_SECRET} ${KUBEEDGE_CA_SECRET_NS}"
+      devspace run mkcert.create-ca-secret ${KUBEEDGE_CA_NAME} ${KUBEEDGE_CA_SECRET} ${KUBEEDGE_CA_SECRET_NS}
+
+deployments:
+  - name: cloudcore
+    kubectl:
+      kustomize: true
+      manifests:
+        - dev/manifests/kubeedge/cloudcore
+    namespace: kubeedge
+
+hooks:
+  - name: "install-dependencies"
+    command: |-
+      devspace run olm.install
+      devspace run ingress.install
+    events:
+      - "before:deploy"
+
+  - name: "create certificates"
+    command: |-
+      # devspace run mkcert.create-ca-secret ${KUBEEDGE_CA_NAME} ${KUBEEDGE_CA_SECRET} ${KUBEEDGE_CA_SECRET_NS}
+      devspace run mkcert.create-cert ${KUBEEDGE_CA_NAME} \
+        -cert-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.cert \
+        -key-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local
+    events:
+      - "before:deploy:cloudcore"
