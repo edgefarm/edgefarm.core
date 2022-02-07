@@ -91,6 +91,15 @@ deployments:
         - dev/manifests/kubeedge/cloudcore
     namespace: kubeedge
 
+  - name: crossplane
+    helm:
+      chart:
+        version: 1.6.2
+        name: crossplane
+        repo: https://charts.crossplane.io/stable
+      values:
+    namespace: crossplane-system
+
 hooks:
   - name: "install-dependencies"
     command: |-
