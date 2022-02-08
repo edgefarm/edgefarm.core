@@ -120,6 +120,15 @@ deployments:
         - dev/manifests/vault
     namespace: vault-system
 
+  - name: capsule
+    helm:
+      chart:
+        name: capsule
+        version: 0.1.6
+        repo: https://clastix.github.io/charts
+      values:
+    namespace: capsule-system
+
 hooks:
   - name: "install-dependencies"
     command: |-

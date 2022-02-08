@@ -15,6 +15,10 @@ options:
       - arg: --disable=traefik
         nodeFilters:
           - server:*
+      # set admission plugins (e.g. for capsule)
+      - arg: --kube-apiserver-arg=enable-admission-plugins=PodNodeSelector,LimitRanger,ResourceQuota,MutatingAdmissionWebhook,ValidatingAdmissionWebhook
+        nodeFilters:
+          - server:*
 ports:
   - port: 30080:80
     nodeFilters:
