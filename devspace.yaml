@@ -1,59 +1,19 @@
 version: v1beta11
 
 vars:
-  # k3d
-  - name: K3D_CLUSTER_NAME
-    value: edgefarm-core
-  - name: K3D_CONFIG
-    command: echo $(pwd)/dev/k3d-config.yaml
-  - name: K3D_EXTRA_ARGS
-    value: --volume $HOME/.devspace/certs/:/etc/self-ssl/@server:*
-
   # kubeedge certificates
-  - name: KUBEEDGE_CA_NAME
+  - name: KUBEEDGE_CA
     value: kubeedge
-  - name: KUBEEDGE_CA_SECRET
+  - name: KUBEEDGE_SECRET
     value: kubeedge-ca
-  - name: KUBEEDGE_CA_SECRET_NS
+  - name: KUBEEDGE_NS
     value: kubeedge
 
   # ingess-tls ca
-  - name: INGRESS_CA_NAME
+  - name: INGRESS_CA
     value: ingress-tls # todo
 
-  - name: HOST_IP
-    question: What is the IP address of your host? (Prefer tailscale IP if available; run `tailscale ip -4`)?
-    default: "127.0.0.1"
-
-  - name: PWD
-    command: pwd
-
 dependencies:
-  - name: k3d
-    source:
-      git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/k3d
-      branch: base-dependencies
-    vars:
-      - name: K3D_CLUSTER_NAME
-        value: ${K3D_CLUSTER_NAME}
-      - name: K3D_CONFIG
-        value: ${K3D_CONFIG}
-      - name: K3D_EXTRA_ARGS
-        value: ${K3D_EXTRA_ARGS}
-
-  - name: olm
-    source:
-      git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/olm
-      branch: base-dependencies
-
-  - name: ingress
-    source:
-      git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/ingress
-      branch: base-dependencies
-
   - name: mkcert
     source:
       git: https://github.com/edgefarm/devspace.base
@@ -63,90 +23,62 @@ dependencies:
 commands:
   - name: init
     command: |-
-      devspace run update
-      devspace run k3d.init
-      devspace run ingress.init
       devspace run init-kubeedge-ca
-
-  - name: purge
-    command: |-
-      devspace run k3d.purge
-
-  - name: activate
-    command: |-
-      devspace run k3d.activate
-
-  - name: update
-    command: |-
-      devspace update dependencies
+      devspace run init-vault-ca
 
   - name: init-kubeedge-ca
     command: |-
-      devspace run mkcert.init-ca ${KUBEEDGE_CA_NAME}
-      kubectl get ns ${KUBEEDGE_CA_SECRET_NS} &>/dev/null || kubectl create ns ${KUBEEDGE_CA_SECRET_NS}
-      echo "devspace run mkcert.create-ca-secret ${KUBEEDGE_CA_NAME} ${KUBEEDGE_CA_SECRET} ${KUBEEDGE_CA_SECRET_NS}"
-      devspace run mkcert.create-ca-secret ${KUBEEDGE_CA_NAME} ${KUBEEDGE_CA_SECRET} ${KUBEEDGE_CA_SECRET_NS}
+      devspace run mkcert.init-ca ${KUBEEDGE_CA}
+      kubectl get ns ${KUBEEDGE_NS} &>/dev/null || kubectl create ns ${KUBEEDGE_NS}
+      devspace run mkcert.create-ca-secret ${KUBEEDGE_CA} ${KUBEEDGE_SECRET} ${KUBEEDGE_NS}
+
+      [ ! -d "$(pwd)/dev/manifests/kubeedge/cloudcore/.certs" ] && mkdir -p "$(pwd)/dev/manifests/kubeedge/cloudcore/.certs"
+      devspace run mkcert.create-cert ${KUBEEDGE_CA} \
+        -cert-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.crt \
+        -key-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local
+
+  - name: init-vault-ca
+    command: |-
+      [ ! -d "$(pwd)/dev/manifests/vault/.certs" ] && mkdir -p "$(pwd)/dev/manifests/vault/.certs"
+      devspace run mkcert.create-cert ${INGRESS_CA} \
+        -cert-file $(pwd)/dev/manifests/vault/.certs/server.crt \
+        -key-file $(pwd)/dev/manifests/vault/.certs/server.key *
 
 deployments:
   - name: cloudcore
     kubectl:
       kustomize: true
       manifests:
-        - dev/manifests/kubeedge/cloudcore
+        - ./dev/manifests/kubeedge/cloudcore
     namespace: kubeedge
 
   - name: crossplane
-    helm:
-      chart:
-        version: 1.6.2
-        name: crossplane
-        repo: https://charts.crossplane.io/stable
-      values:
+    kubectl:
+      kustomize: true
+      kustomizeArgs: ["--enable-helm"]
+      manifests:
+        - ./manifests/crossplane
     namespace: crossplane-system
 
   - name: vault-operator
-    helm:
-      chart:
-        name: vault-operator
-        version: 1.15.2
-        repo: https://kubernetes-charts.banzaicloud.com
-      values:
+    kubectl:
+      kustomize: true
+      kustomizeArgs: ["--enable-helm"]
+      manifests:
+        - ./manifests/vault-operator
     namespace: vault-system
 
   - name: vault
     kubectl:
       kustomize: true
       manifests:
-        - dev/manifests/vault
+        - ./dev/manifests/vault
     namespace: vault-system
 
   - name: capsule
-    helm:
-      chart:
-        name: capsule
-        version: 0.1.6
-        repo: https://clastix.github.io/charts
-      values:
+    kubectl:
+      kustomize: true
+      kustomizeArgs: ["--enable-helm"]
+      manifests:
+        - ./manifests/capsule
     namespace: capsule-system
-
-hooks:
-  - name: "install-dependencies"
-    command: |-
-      devspace run olm.install
-      devspace run ingress.install
-    events:
-      - "before:deploy"
-
-  - name: "create certificates"
-    command: |-
-      # kubeedge
-      devspace run mkcert.create-cert ${KUBEEDGE_CA_NAME} \
-        -cert-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.crt \
-        -key-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local
-
-      # vault
-      devspace run mkcert.create-cert ${INGRESS_CA_NAME} \
-        -cert-file ${PWD}/dev/manifests/vault/.certs/server.crt \
-        -key-file ${PWD}/dev/manifests/vault/.certs/server.key *
-    events:
-      - "before:deploy:cloudcore"

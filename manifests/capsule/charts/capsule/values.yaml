@@ -1,0 +1,129 @@
+# Default values for capsule.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+manager:
+  image:
+    repository: quay.io/clastix/capsule
+    pullPolicy: IfNotPresent
+    tag: ''
+
+  # Specifies if the container should be started in hostNetwork mode.
+  #
+  # Required for use in some managed kubernetes clusters (such as AWS EKS) with custom
+  # CNI (such as calico), because control-plane managed by AWS cannot communicate
+  # with pods' IP CIDR and admission webhooks are not working
+  hostNetwork: false
+
+  # Additional Capsule options
+  options:
+    logLevel: '4'
+    forceTenantPrefix: false
+    capsuleUserGroups: ["capsule.clastix.io"]
+    protectedNamespaceRegex: ""
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 10080
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: 10080
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 200m
+      memory: 128Mi
+jobs:
+  image:
+    repository: quay.io/clastix/kubectl
+    pullPolicy: IfNotPresent
+    tag: ""
+imagePullSecrets: []
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "capsule"
+podAnnotations: {}
+priorityClassName: '' #system-cluster-critical
+nodeSelector: {}
+#  node-role.kubernetes.io/master: ""
+tolerations: []
+#- key: CriticalAddonsOnly
+#  operator: Exists
+#- effect: NoSchedule
+#  key: node-role.kubernetes.io/master
+replicaCount: 1
+affinity: {}
+podSecurityPolicy:
+  enabled: false
+
+serviceMonitor:
+  enabled: false
+  # Install the ServiceMonitor into a different Namespace, as the monitoring stack one (default: the release one)
+  namespace: ''
+  # Assign additional labels according to Prometheus' serviceMonitorSelector matching labels
+  labels: {}
+  annotations: {}
+  matchLabels: {}
+  serviceAccount:
+    name: capsule
+    namespace: capsule-system
+
+# Additional labels
+customLabels: {}
+
+# Additional annotations
+customAnnotations: {}
+
+# Webhooks configurations
+webhooks:
+  namespaceOwnerReference:
+    failurePolicy: Fail
+  cordoning:
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: capsule.clastix.io/tenant
+          operator: Exists
+  ingresses:
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: capsule.clastix.io/tenant
+          operator: Exists
+  namespaces:
+    failurePolicy: Fail
+  networkpolicies:
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: capsule.clastix.io/tenant
+          operator: Exists
+  pods:
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: capsule.clastix.io/tenant
+          operator: Exists
+  persistentvolumeclaims:
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: capsule.clastix.io/tenant
+          operator: Exists
+  tenants:
+    failurePolicy: Fail
+  services:
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: capsule.clastix.io/tenant
+          operator: Exists
+  nodes:
+    failurePolicy: Fail
+mutatingWebhooksTimeoutSeconds: 30
+validatingWebhooksTimeoutSeconds: 30
