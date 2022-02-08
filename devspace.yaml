@@ -17,6 +17,10 @@ vars:
   - name: KUBEEDGE_CA_SECRET_NS
     value: kubeedge
 
+  # ingess-tls ca
+  - name: INGRESS_CA_NAME
+    value: ingress-tls # todo
+
   - name: HOST_IP
     question: What is the IP address of your host? (Prefer tailscale IP if available; run `tailscale ip -4`)?
     default: "127.0.0.1"
@@ -100,6 +104,22 @@ deployments:
       values:
     namespace: crossplane-system
 
+  - name: vault-operator
+    helm:
+      chart:
+        name: vault-operator
+        version: 1.15.2
+        repo: https://kubernetes-charts.banzaicloud.com
+      values:
+    namespace: vault-system
+
+  - name: vault
+    kubectl:
+      kustomize: true
+      manifests:
+        - dev/manifests/vault
+    namespace: vault-system
+
 hooks:
   - name: "install-dependencies"
     command: |-
@@ -110,9 +130,14 @@ hooks:
 
   - name: "create certificates"
     command: |-
-      # devspace run mkcert.create-ca-secret ${KUBEEDGE_CA_NAME} ${KUBEEDGE_CA_SECRET} ${KUBEEDGE_CA_SECRET_NS}
+      # kubeedge
       devspace run mkcert.create-cert ${KUBEEDGE_CA_NAME} \
-        -cert-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.cert \
+        -cert-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.crt \
         -key-file ${PWD}/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local
+
+      # vault
+      devspace run mkcert.create-cert ${INGRESS_CA_NAME} \
+        -cert-file ${PWD}/dev/manifests/vault/.certs/server.crt \
+        -key-file ${PWD}/dev/manifests/vault/.certs/server.key *
     events:
       - "before:deploy:cloudcore"

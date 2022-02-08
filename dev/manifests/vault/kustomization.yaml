@@ -5,10 +5,11 @@ generatorOptions:
   disableNameSuffixHash: true
 
 resources:
-  - ../../../../manifests/kubeedge/cloudcore
+  - ../../../manifests/vault
 
 secretGenerator:
-  - name: kubeedge-certs
+  - name: vault-certs
     files:
-      - server.crt=.certs/server.crt
-      - server.key=.certs/server.key
+      - tls.crt=.certs/server.crt
+      - tls.key=.certs/server.key
+    type: "kubernetes.io/tls"
