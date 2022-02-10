@@ -75,10 +75,11 @@ deployments:
         - ./dev/manifests/vault
     namespace: vault-system
 
-  - name: capsule
-    kubectl:
-      kustomize: true
-      kustomizeArgs: ["--enable-helm"]
-      manifests:
-        - ./manifests/capsule
-    namespace: capsule-system
+  # todo: temporary deactivated because of error: certificate signed by unknown authority
+  # - name: capsule
+  #   kubectl:
+  #     kustomize: true
+  #     kustomizeArgs: ["--enable-helm"]
+  #     manifests:
+  #       - ./manifests/capsule
+  #   namespace: capsule-system
