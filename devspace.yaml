@@ -18,7 +18,7 @@ dependencies:
     source:
       git: https://github.com/edgefarm/devspace.base
       subPath: /environments/mkcert
-      branch: base-dependencies
+      branch: v1.0.1
 
 commands:
   - name: init

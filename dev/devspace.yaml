@@ -14,7 +14,7 @@ dependencies:
     source:
       git: https://github.com/edgefarm/devspace.base
       subPath: /environments/k3d
-      branch: base-dependencies
+      branch: v1.0.1
     vars:
       - name: K3D_CLUSTER_NAME
         value: ${K3D_CLUSTER_NAME}
@@ -27,13 +27,13 @@ dependencies:
     source:
       git: https://github.com/edgefarm/devspace.base
       subPath: /environments/olm
-      branch: base-dependencies
+      branch: v1.0.1
 
   - name: ingress
     source:
       git: https://github.com/edgefarm/devspace.base
       subPath: /environments/ingress
-      branch: base-dependencies
+      branch: v1.0.1
 
   - name: edgefarm-core
     source:
