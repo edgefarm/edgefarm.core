@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - cluster_objectsync_v1alpha1.yaml
+  - devices_v1alpha2_device.yaml
+  - devices_v1alpha2_devicemodel.yaml
+  - objectsync_v1alpha1.yaml
+  - router_v1_rule.yaml
+  - router_v1_ruleEndpoint.yaml
