@@ -1,6 +1,16 @@
 version: v1beta11
 
 vars:
+  # kubeedge
+  - name: HOST_IP
+    question: What is the IP address of your host? (Prefer tailscale IP if available; run `tailscale ip -4`)?
+    default: "127.0.0.1"
+  - name: HOST_IP_NIP_IO
+    command: echo $(echo ${HOST_IP} | xargs).nip.io
+  - name: NUMBER_OF_VIRTUAL_DEVICES
+    value: 2
+  - name: KUBEEDGE_CA
+    value: kubeedge
   # k3d
   - name: K3D_CLUSTER_NAME
     value: edgefarm-core
@@ -60,3 +70,20 @@ commands:
   - name: update
     command: |-
       devspace update dependencies
+
+  - name: instantiate-nodes
+    command: |-
+      devspace run mkcert.create-client-cert ${KUBEEDGE_CA} \
+        -cert-file $(pwd)/hack/kubeedge-node/certs/node.pem \
+        -key-file $(pwd)/hack/kubeedge-node/certs/node.key *.nip.io *.edgefarm.local
+      hack/build-kubeedge-node.sh
+      for i in $(seq ${NUMBER_OF_VIRTUAL_DEVICES}); do
+        hack/instantiate-kubeedge-node.sh ${HOST_IP_NIP_IO} node$i
+      done
+
+  - name: purge-nodes
+    command: |-
+      for i in $(seq ${NUMBER_OF_VIRTUAL_DEVICES}); do
+        docker kill node$i
+        kubectl delete nodes node$i
+      done
