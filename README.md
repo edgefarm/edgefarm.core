@@ -5,6 +5,28 @@ edgefarm.core extends an existing kubernetes cluster by secured cloud/edge compu
 edgefarm.core uses different open source tools to provide edge node integration,
 secure node registration and isolation.
 
+## Detail
+
+### kubeedge
+
+Using kubeedge, special kubernetes edge nodes (edge devices) can be added to the cluster.
+The edge node behaves like a standard kubernetes node, with the difference that workload
+can still be operated reliably even if the connection to the kubernetes cluster is temporarily unavailable.
+
+### vault
+
+KubeEdge implements only a rudimentary authentication procedure for edge nodes based on
+self-generated tokens. By interacting with vault, a variety of authentication methods
+become possible. Furthermore, features like certificate renewals and revocation lists can be implemented.
+
+### capsule
+
+tbd
+
+### crossplane
+
+tbd
+
 ## Developing edgefarm.core
 
 To set up a local development environment there is a devspace.yaml in the `/dev` subfolder which can be used directly.
