@@ -7,7 +7,8 @@ metadata:
     kubeedge: cloudcore
 rules:
   - apiGroups: [""]
-    resources: [
+    resources:
+      [
         "nodes",
         "nodes/status",
         "serviceaccounts/token",
@@ -19,8 +20,7 @@ rules:
         "services",
         "persistentvolumes",
         "persistentvolumeclaims",
-        "destinationrules", #!copy
-        "serviceaccounts/token", #!copy
+        "destinationrules",
       ]
     verbs: ["get", "list", "watch", "create", "update"]
   - apiGroups: [""]
@@ -58,6 +58,6 @@ rules:
   - apiGroups: ["networking.istio.io"]
     resources: ["*"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"] #!copy
+  - apiGroups: ["storage.k8s.io"]
     resources: ["volumeattachments"]
     verbs: ["get", "list", "watch", "update"]

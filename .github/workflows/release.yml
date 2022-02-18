@@ -1,12 +1,16 @@
 name: Release
+
 on:
-  push:
+  workflow_run:
+    workflows: ["Lint Commit Messages"]
     branches:
       - main
       - beta
+    types:
+      - completed
 
 jobs:
-  release:
+  on-success:
     name: Release
     runs-on: ubuntu-latest
     steps:
