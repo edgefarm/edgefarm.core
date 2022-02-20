@@ -86,7 +86,6 @@ commands:
   - name: purge-nodes
     command: |-
       #!/bin/bash
-      set -e
       for i in $(seq ${NUMBER_OF_VIRTUAL_DEVICES}); do
         docker kill node$i
         kubectl delete nodes node$i
