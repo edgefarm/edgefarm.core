@@ -27,8 +27,7 @@ spec:
               - matchExpressions:
                   - key: node-role.kubernetes.io/edge
                     operator: DoesNotExist
-
-              - matchExpressions: #!copy
+              - matchExpressions:
                   - key: beta.kubernetes.io/os
                     operator: NotIn
                     values:
@@ -37,7 +36,7 @@ spec:
                     operator: In
                     values:
                       - "true"
-              - matchExpressions: #!copy
+              - matchExpressions:
                   - key: beta.kubernetes.io/os
                     operator: NotIn
                     values:
@@ -46,7 +45,7 @@ spec:
                     operator: In
                     values:
                       - "true"
-              - matchExpressions: #!copy
+              - matchExpressions:
                   - key: beta.kubernetes.io/os
                     operator: NotIn
                     values:
@@ -125,7 +124,7 @@ spec:
             path: /etc/localtime
             type: ""
           name: host-time
-      tolerations: #!copy
+      tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/controlplane
           value: "true"

@@ -73,7 +73,9 @@ commands:
 
   - name: instantiate-nodes
     command: |-
-      devspace run mkcert.create-client-cert ${KUBEEDGE_CA} \
+      #!/bin/bash
+      set -e
+      devspace run edgefarm-core.mkcert.create-client-cert ${KUBEEDGE_CA} \
         -cert-file $(pwd)/hack/kubeedge-node/certs/node.pem \
         -key-file $(pwd)/hack/kubeedge-node/certs/node.key *.nip.io *.edgefarm.local
       hack/build-kubeedge-node.sh
@@ -83,6 +85,7 @@ commands:
 
   - name: purge-nodes
     command: |-
+      #!/bin/bash
       for i in $(seq ${NUMBER_OF_VIRTUAL_DEVICES}); do
         docker kill node$i
         kubectl delete nodes node$i
