@@ -14,8 +14,6 @@ data:
       master: ""
     modules:
       cloudHub:
-        advertiseAddress:
-        -
         nodeLimit: 1000
         tlsCAFile: /etc/kubeedge/ca/rootCA.crt
         tlsCAKeyFile: /etc/kubeedge/ca/rootCA.key
