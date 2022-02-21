@@ -10,7 +10,7 @@ on:
       - completed
 
 jobs:
-  release:
+  on-success:
     name: Release
     runs-on: ubuntu-latest
     steps:
