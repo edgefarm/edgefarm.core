@@ -1,6 +1,6 @@
 FROM cruizba/ubuntu-dind:19.03.11
 
-ENV KUBEEDGE_VERSION=v1.8.2
+ENV KUBEEDGE_VERSION=v1.9.1
 ENV KUBEEDGE_ARCH=amd64
 
 RUN curl -L https://github.com/kubeedge/kubeedge/releases/download/${KUBEEDGE_VERSION}/kubeedge-${KUBEEDGE_VERSION}-linux-${KUBEEDGE_ARCH}.tar.gz -o kubeedge-${KUBEEDGE_VERSION}-linux-${KUBEEDGE_ARCH}.tar.gz && \
