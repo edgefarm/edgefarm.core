@@ -27,33 +27,6 @@ spec:
               - matchExpressions:
                   - key: node-role.kubernetes.io/edge
                     operator: DoesNotExist
-              - matchExpressions:
-                  - key: beta.kubernetes.io/os
-                    operator: NotIn
-                    values:
-                      - windows
-                  - key: node-role.kubernetes.io/controlplane
-                    operator: In
-                    values:
-                      - "true"
-              - matchExpressions:
-                  - key: beta.kubernetes.io/os
-                    operator: NotIn
-                    values:
-                      - windows
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: In
-                    values:
-                      - "true"
-              - matchExpressions:
-                  - key: beta.kubernetes.io/os
-                    operator: NotIn
-                    values:
-                      - windows
-                  - key: node-role.kubernetes.io/master
-                    operator: In
-                    values:
-                      - "true"
       serviceAccount: cloudcore
       containers:
         - name: cloudcore
