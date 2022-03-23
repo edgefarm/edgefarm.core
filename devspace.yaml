@@ -79,6 +79,13 @@ deployments:
         - ./dev/manifests/vault
     namespace: vault-system
 
+  - name: reloader
+    kubectl:
+      kustomize: true
+      manifests:
+        - ./manifests/reloader
+    namespace: reloader
+
   # todo: temporary deactivated because of error: certificate signed by unknown authority
   # - name: capsule
   #   kubectl:
