@@ -12,7 +12,7 @@ modules:
   edgeHub:
     enable: true
     heartbeat: 15
-    httpServer: https://${CLOUDCORE_ADDRESS}:30002
+    httpServer: https://${CLOUDCORE_ADDRESS}:10002
     projectID: e632aba927ea4ac2b575ec1603d56f10
     quic:
       enable: false
@@ -24,13 +24,13 @@ modules:
       enable: true
       handshakeTimeout: 30
       readDeadline: 15
-      server: ${CLOUDCORE_ADDRESS}:30000
+      server: ${CLOUDCORE_ADDRESS}:10000
       writeDeadline: 15
   edgeStream:
     enable: true
     handshakeTimeout: 30
     readDeadline: 15
-    server: ${CLOUDCORE_ADDRESS}:30004
+    server: ${CLOUDCORE_ADDRESS}:10004
     tlsTunnelCAFile: /etc/kubeedge/certs/rootCa.pem
     tlsTunnelCertFile: /etc/kubeedge/certs/node.pem
     tlsTunnelPrivateKeyFile: /etc/kubeedge/certs/node.key
