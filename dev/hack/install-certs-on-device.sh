@@ -31,7 +31,7 @@ if [ ! -f "$nodePublicKey" ] ||  [ ! -f "$nodePrivateKey" ]; then
     devspace run mkcert.create-client-cert kubeedge \
     -cert-file ${nodePublicKey} \
     -key-file ${nodePrivateKey} *.nip.io *.edgefarm.local
-fi 
+fi
 
 scp ${rootCa} root@${deviceIP}:/etc/kubeedge/certs/
 scp ${nodePublicKey} root@${deviceIP}:/etc/kubeedge/certs/
