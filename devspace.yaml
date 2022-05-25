@@ -9,9 +9,13 @@ vars:
   - name: KUBEEDGE_NS
     value: kubeedge
 
-  # ingess-tls ca
-  - name: INGRESS_CA
-    value: ingress-tls # todo
+  # vault ca
+  - name: VAULT_CA
+    value: vault
+  - name: VAULT_SECRET
+    value: vault-ca
+  - name: VAULT_NS
+    value: vault-system
 
 dependencies:
   - name: mkcert
@@ -43,10 +47,14 @@ commands:
     command: |-
       #!/bin/bash
       set -e
+      devspace run mkcert.init-ca ${VAULT_CA}
+      kubectl get ns ${VAULT_NS} &>/dev/null || kubectl create ns ${VAULT_NS}
+      devspace run mkcert.create-ca-secret ${VAULT_CA} ${VAULT_SECRET} ${VAULT_NS}
+
       [ ! -d "$(pwd)/dev/manifests/vault/.certs" ] && mkdir -p "$(pwd)/dev/manifests/vault/.certs"
-      devspace run mkcert.create-cert ${INGRESS_CA} \
+      devspace run mkcert.create-cert ${VAULT_CA} \
         -cert-file $(pwd)/dev/manifests/vault/.certs/server.crt \
-        -key-file $(pwd)/dev/manifests/vault/.certs/server.key *
+        -key-file $(pwd)/dev/manifests/vault/.certs/server.key *.nip.io *.edgefarm.local
 
 deployments:
   - name: cloudcore
@@ -56,41 +64,9 @@ deployments:
         - ./dev/manifests/kubeedge/cloudcore
     namespace: kubeedge
 
-  - name: crossplane
-    kubectl:
-      kustomize: true
-      kustomizeArgs: ["--enable-helm"]
-      manifests:
-        - ./manifests/crossplane
-    namespace: crossplane-system
-
-  - name: vault-operator
-    kubectl:
-      kustomize: true
-      kustomizeArgs: ["--enable-helm"]
-      manifests:
-        - ./manifests/vault-operator
-    namespace: vault-system
-
   - name: vault
     kubectl:
       kustomize: true
       manifests:
         - ./dev/manifests/vault
     namespace: vault-system
-
-  - name: reloader
-    kubectl:
-      kustomize: true
-      manifests:
-        - ./manifests/reloader
-    namespace: reloader
-
-  # todo: temporary deactivated because of error: certificate signed by unknown authority
-  # - name: capsule
-  #   kubectl:
-  #     kustomize: true
-  #     kustomizeArgs: ["--enable-helm"]
-  #     manifests:
-  #       - ./manifests/capsule
-  #   namespace: capsule-system

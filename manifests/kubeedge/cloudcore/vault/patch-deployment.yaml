@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudcore
+spec:
+  template:
+    spec:
+      initContainers:
+        - image: ci4rail/certretrieval:latest
+          imagePullPolicy: Always
+          name: initial-certretrieval
+          command:
+            - /certretrieval
+            - -config
+            - /opt/certretrieval/settings/certretrieval.config
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 125m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /etc/kubeedge/ca
+              name: ca
+            - mountPath: /etc/kubeedge/certs
+              name: certs
+            - mountPath: /opt/certretrieval/settings
+              name: settings
+              readOnly: true
+            # currently unused, because vault has no tls cert
+            # - mountPath: /opt/certretrieval/cert
+            #   name: cacert
+            #   readOnly: true
+      containers:
+        - name: cloudcore
+          image: ci4rail/cloudcore:latest
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 1
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+        - image: ci4rail/certretrieval:latest
+          imagePullPolicy: Always
+          name: certertrieval
+          command:
+            - /certretrieval
+            - -config
+            - /opt/certretrieval/settings/certretrieval.config
+            - -loopdelay
+            - "30s"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 125m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /etc/kubeedge/ca
+              name: ca
+            - mountPath: /etc/kubeedge/certs
+              name: certs
+            - mountPath: /opt/certretrieval/settings
+              name: settings
+              readOnly: true
+            # currently unused, because vault has no tls cert
+            # - mountPath: /opt/certretrieval/cert
+            #   name: cacert
+            #   readOnly: true
+      volumes:
+        # currently unused, because vault has no tls cert
+        # - name: cacert
+        #   configMap:
+        #     name: cacert
+        #     items:
+        #       - key: ca.crt
+        #         path: ca.crt
+        - name: settings
+          configMap:
+            name: certretrieval.config
+            items:
+              - key: certretrieval.config
+                path: certretrieval.config

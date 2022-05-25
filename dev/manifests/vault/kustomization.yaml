@@ -13,3 +13,6 @@ secretGenerator:
       - tls.crt=.certs/server.crt
       - tls.key=.certs/server.key
     type: "kubernetes.io/tls"
+
+patches:
+  - ./patch-host-network.yaml

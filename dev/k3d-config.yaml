@@ -42,3 +42,11 @@ ports:
     nodeFilters:
       - server:*
       - agent:*
+  - port: 38400:8400
+    nodeFilters:
+      - server:*
+      - agent:*
+  - port: 38200:8200
+    nodeFilters:
+      - server:*
+      - agent:*

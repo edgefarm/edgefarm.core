@@ -9,3 +9,19 @@ resources:
   - deployment.yaml
   - service.yaml
   - serviceaccount.yaml
+
+patches:
+  - vault/patch-deployment.yaml
+
+configMapGenerator:
+  - name: certretrieval.config
+    files:
+      - vault/certretrieval.config
+
+patchesJson6902:
+  - path: vault/patch-volumes.json
+    target:
+      kind: Deployment
+      name: cloudcore
+      version: v1
+      group: apps
