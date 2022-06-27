@@ -36,7 +36,7 @@ vault write auth/token/roles/pki-client allowed_policies=pki-client renewable=tr
 echo -e "${RED}Enabling kubernets auth${NC}"
 vault auth enable kubernetes
 mkdir -p cluster
-read -p "Enter cloud URI https://cluster.example.com:6443: " KUBERNETES_URI
+read -p "Enter cluster api server URI, e.g. 'https://cluster.example.com:6443': " KUBERNETES_URI
 
 # export KUBERNETES_URI=$(kubectl cluster-info | grep "control plane" | awk -F " at " '{print $2}' | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g")
 export KUBERNETES_HOST_AND_PORT=$(echo ${KUBERNETES_URI} | awk -F "https://" '{print $2}')
