@@ -11,27 +11,23 @@ vars:
     value: 2
   - name: KUBEEDGE_CA
     value: kubeedge
-  # k3d
-  - name: K3D_CLUSTER_NAME
-    value: edgefarm-core
-  - name: K3D_CONFIG
-    command: echo $(pwd)/k3d-config.yaml
-  - name: K3D_EXTRA_ARGS
-    value: --volume $HOME/.devspace/certs/:/etc/self-ssl/@server:*
+  # kind
+  - name: KIND_CLUSTER_NAME
+    value: kind-edgefarm-core
+  - name: KIND_CLUSTER_VERSION
+    value: v1.21.12
 
 dependencies:
-  - name: k3d
+  - name: kind
     source:
       git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/k3d
-      branch: v1.0.1
+      subPath: /environments/kind
+      branch: minikube
     vars:
-      - name: K3D_CLUSTER_NAME
-        value: ${K3D_CLUSTER_NAME}
-      - name: K3D_CONFIG
-        value: ${K3D_CONFIG}
-      - name: K3D_EXTRA_ARGS
-        value: ${K3D_EXTRA_ARGS}
+      - name: KIND_CLUSTER_NAME
+        value: ${KIND_CLUSTER_NAME}
+      - name: KIND_CLUSTER_VERSION
+        value: ${KIND_CLUSTER_VERSION}
 
   - name: olm
     source:
@@ -53,7 +49,7 @@ commands:
   - name: init
     command: |-
       devspace run update
-      devspace run k3d.init
+      devspace run kind.init
       devspace run ingress.init
       devspace run olm.install
       devspace run ingress.install
@@ -61,11 +57,11 @@ commands:
 
   - name: purge
     command: |-
-      devspace run k3d.purge
+      devspace run kind.purge
 
   - name: activate
     command: |-
-      devspace run k3d.activate
+      devspace run kind.activate
 
   - name: update
     command: |-
