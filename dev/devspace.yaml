@@ -18,6 +18,10 @@ vars:
     value: "v1.21.12"
 
 dependencies:
+  - name: edgefarm-core
+    source:
+      path: ../
+
   - name: kind
     source:
       git: https://github.com/edgefarm/devspace.base
@@ -49,9 +53,10 @@ dependencies:
       subPath: /environments/ingress
       branch: v1.1.0
 
-  - name: edgefarm-core
+  - name: virtual-edge-node
     source:
-      path: ../
+      git: https://github.com/edgefarm/virtual-edge-node
+      branch: v1.0.7
 
 commands:
   - name: init
@@ -62,7 +67,6 @@ commands:
       devspace run ingress.init
       devspace run olm.install
       devspace run ingress.install
-      devspace run init-instantiate-nodes
       devspace run edgefarm-core.init
 
   - name: purge
@@ -76,27 +80,3 @@ commands:
   - name: update
     command: |-
       devspace update dependencies
-
-  - name: init-instantiate-nodes
-    command: |-
-      #!/bin/bash
-      set -e
-      devspace run edgefarm-core.mkcert.create-client-cert ${KUBEEDGE_CA} \
-        -cert-file $(pwd)/hack/kubeedge-node/certs/node.pem \
-        -key-file $(pwd)/hack/kubeedge-node/certs/node.key *.nip.io *.edgefarm.local cloudcore.kubeedge.svc.cluster.local
-      hack/build-kubeedge-node.sh
-      kind load docker-image --name ${KIND_CLUSTER_NAME} edgefarm/virtual-device:latest
-
-  - name: instantiate-nodes
-    command: |-
-      #!/bin/bash
-      set -e
-      kubectl apply -k $(pwd)/hack/kubeedge-node
-
-  - name: purge-nodes
-    command: |-
-      #!/bin/bash
-      set -e
-      kubectl delete deployment -n kubeedge virtual-device
-      kubectl delete secret -n kubeedge virtual-device-certs
-      kubectl get nodes -o json | jq '.items | map(select(.metadata.name | test("virtual-device-.+"))) | {kind: "List", items: .}'  | kubectl delete -f -
