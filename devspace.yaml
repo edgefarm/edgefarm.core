@@ -9,22 +9,17 @@ vars:
   - name: KUBEEDGE_NS
     value: kubeedge
 
-  # ingess-tls ca
-  - name: INGRESS_CA
-    value: ingress-tls # todo
-
 dependencies:
   - name: mkcert
     source:
       git: https://github.com/edgefarm/devspace.base
       subPath: /environments/mkcert
-      branch: v1.0.1
+      branch: v1.1.0
 
 commands:
   - name: init
     command: |-
       devspace run init-kubeedge-ca
-      devspace run init-vault-ca
 
   - name: init-kubeedge-ca
     command: |-
@@ -39,15 +34,6 @@ commands:
         -cert-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.crt \
         -key-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local
 
-  - name: init-vault-ca
-    command: |-
-      #!/bin/bash
-      set -e
-      [ ! -d "$(pwd)/dev/manifests/vault/.certs" ] && mkdir -p "$(pwd)/dev/manifests/vault/.certs"
-      devspace run mkcert.create-cert ${INGRESS_CA} \
-        -cert-file $(pwd)/dev/manifests/vault/.certs/server.crt \
-        -key-file $(pwd)/dev/manifests/vault/.certs/server.key *
-
 deployments:
   - name: cloudcore
     kubectl:
@@ -56,41 +42,9 @@ deployments:
         - ./dev/manifests/kubeedge/cloudcore
     namespace: kubeedge
 
-  - name: crossplane
-    kubectl:
-      kustomize: true
-      kustomizeArgs: ["--enable-helm"]
-      manifests:
-        - ./manifests/crossplane
-    namespace: crossplane-system
-
-  - name: vault-operator
-    kubectl:
-      kustomize: true
-      kustomizeArgs: ["--enable-helm"]
-      manifests:
-        - ./manifests/vault-operator
-    namespace: vault-system
-
-  - name: vault
+  - name: metrics-server
     kubectl:
       kustomize: true
       manifests:
-        - ./dev/manifests/vault
-    namespace: vault-system
-
-  - name: reloader
-    kubectl:
-      kustomize: true
-      manifests:
-        - ./manifests/reloader
-    namespace: reloader
-
-  # todo: temporary deactivated because of error: certificate signed by unknown authority
-  # - name: capsule
-  #   kubectl:
-  #     kustomize: true
-  #     kustomizeArgs: ["--enable-helm"]
-  #     manifests:
-  #       - ./manifests/capsule
-  #   namespace: capsule-system
+        - ./manifests/metrics-server
+    namespace: kube-system

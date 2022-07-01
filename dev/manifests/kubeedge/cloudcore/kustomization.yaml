@@ -12,3 +12,13 @@ secretGenerator:
     files:
       - server.crt=.certs/server.crt
       - server.key=.certs/server.key
+
+patchesJSON6902:
+  - target:
+      version: v1
+      kind: Service
+      name: cloudcore
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: NodePort

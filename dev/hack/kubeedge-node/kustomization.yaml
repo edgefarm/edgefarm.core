@@ -1,15 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: kubeedge
 
 generatorOptions:
   disableNameSuffixHash: true
 
 resources:
-  - ../../../manifests/vault
+  - manifests/deployment.yaml
 
 secretGenerator:
-  - name: vault-certs
+  - name: virtual-device-certs
     files:
-      - tls.crt=.certs/server.crt
-      - tls.key=.certs/server.key
-    type: "kubernetes.io/tls"
+      - node.pem=./certs/node.pem
+      - node.key=./certs/node.key

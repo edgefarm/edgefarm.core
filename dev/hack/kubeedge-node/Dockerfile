@@ -20,4 +20,3 @@ RUN mkdir -p /etc/kubeedge/ca && \
     mkdir -p /etc/kubeedge/certs
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-# ENTRYPOINT ["/bin/bash", "-c", "sleep 9999999"]
