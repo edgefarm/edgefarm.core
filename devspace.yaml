@@ -32,7 +32,7 @@ commands:
       [ ! -d "$(pwd)/dev/manifests/kubeedge/cloudcore/.certs" ] && mkdir -p "$(pwd)/dev/manifests/kubeedge/cloudcore/.certs"
       devspace run mkcert.create-cert ${KUBEEDGE_CA} \
         -cert-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.crt \
-        -key-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local
+        -key-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local cloudcore.kubeedge.svc.cluster.local
 
 deployments:
   - name: cloudcore
