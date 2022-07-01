@@ -42,7 +42,7 @@ spec:
           terminationMessagePolicy: File
           env:
             - name: CLOUDCORE_ADDRESS
-              value: 192-168-1-42.nip.io
+              value: cloudcore.kubeedge.svc.cluster.local
           volumeMounts:
             - name: certs
               mountPath: /etc/kubeedge/certs/node.key

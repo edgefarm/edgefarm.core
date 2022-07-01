@@ -7,8 +7,6 @@ vars:
     default: "127.0.0.1"
   - name: HOST_IP_NIP_IO
     command: echo $(echo ${HOST_IP} | xargs).nip.io
-  - name: NUMBER_OF_VIRTUAL_DEVICES
-    value: 2
   - name: KUBEEDGE_CA
     value: kubeedge
   # kind
@@ -85,7 +83,7 @@ commands:
       set -e
       devspace run edgefarm-core.mkcert.create-client-cert ${KUBEEDGE_CA} \
         -cert-file $(pwd)/hack/kubeedge-node/certs/node.pem \
-        -key-file $(pwd)/hack/kubeedge-node/certs/node.key *.nip.io *.edgefarm.local
+        -key-file $(pwd)/hack/kubeedge-node/certs/node.key *.nip.io *.edgefarm.local cloudcore.kubeedge.svc.cluster.local
       hack/build-kubeedge-node.sh
       kind load docker-image --name ${KIND_CLUSTER_NAME} edgefarm/virtual-device:latest
 
@@ -93,15 +91,6 @@ commands:
     command: |-
       #!/bin/bash
       set -e
-      echo "Double check if the env CLOUDCORE_ADDRESS is set properly in /hack/kubeedge-node/manifests/deployment.yaml"
-      while true; do
-        read -p "Current CLOUDCORE_ADDRESS is: '$(yq eval '.spec.template.spec.containers[0].env[0].value' $(pwd)/hack/kubeedge-node/manifests/deployment.yaml)'. Is this correct? " yn
-          case $yn in
-            [Yy]* ) break;;
-            [Nn]* ) exit;;
-            * ) echo "Please answer yes or no.";;
-          esac
-      done
       kubectl apply -k $(pwd)/hack/kubeedge-node
 
   - name: purge-nodes
