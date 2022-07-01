@@ -13,19 +13,11 @@ Using kubeedge, special kubernetes edge nodes (edge devices) can be added to the
 The edge node behaves like a standard kubernetes node, with the difference that workload
 can still be operated reliably even if the connection to the kubernetes cluster is temporarily unavailable.
 
-### vault
+### metrics-server
 
-KubeEdge implements only a rudimentary authentication procedure for edge nodes based on
-self-generated tokens. By interacting with vault, a variety of authentication methods
-become possible. Furthermore, features like certificate renewals and revocation lists can be implemented.
+Metrics Server is a scalable, efficient source of container resource metrics for Kubernetes built-in autoscaling pipelines.
 
-### capsule
-
-tbd
-
-### crossplane
-
-tbd
+Metrics Server collects resource metrics from Kubelets and exposes them in Kubernetes apiserver through Metrics API for use by Horizontal Pod Autoscaler and Vertical Pod Autoscaler. Metrics API can also be accessed by kubectl top, making it easier to debug autoscaling pipelines.
 
 ## Developing edgefarm.core
 
@@ -35,7 +27,7 @@ The devspace setup relies on k3d to manage local kubernetes clusters.
 Dependencies:
 
 - [devspace](https://devspace.sh/)
-- [k3d](https://k3d.io/)
+- [kind](https://kind.sigs.k8s.io)
 - kubectl
 - kustomize
 - helm
@@ -43,9 +35,9 @@ Dependencies:
 
 There are some predefined handy commands that simplifies the setup process.
 
-`devspace run init`: Initialization with k3d cluster setup.
+`devspace run init`: Initialization with cluster setup.
 
-`devspace run purge`: Remove all created resources, incl. k3d cluster.
+`devspace run purge`: Remove all created resources, incl. cluster.
 
 `devspace run activate`: Set the kubernetes context pointing to the cluster.
 
@@ -60,3 +52,25 @@ devspace deploy
 ```
 
 To apply your modifications, rerun `devspace deploy`.
+
+To handle virtual kubeedge nodes use the following commands:
+
+```sh
+cd ./dev
+# Start virtual nodes. See ./dev/hack/kubeedge-node/manifests/deployment.yaml for settings
+# replicas: the number of virtual devices wanted
+# env CLOUDCORE_ADDRESS: the hostname of cloudcore. This might be in the format of 192-168-1-42.nip.io
+devspace run instantiate-nodes
+
+# Delete virtual nodes and all workload they execute
+# Note: deleting the workload pods from the cluster takes a while until the scheduler detects 
+# that the nodes are missing
+devspace run purge-nodes
+```
+
+To cleanup the environment, execute the following command:
+
+```sh
+cd ./dev
+devspace run purge
+```

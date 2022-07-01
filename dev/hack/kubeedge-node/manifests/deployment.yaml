@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: virtual-device
+  name: virtual-device
+  namespace: kubeedge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      k8s-app: virtual-device
+  template:
+    metadata:
+      labels:
+        k8s-app: virtual-device
+        node-dns.host: virtual-device
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/edge
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/agent
+                    operator: DoesNotExist
+      containers:
+        - image: ci4rail/virtual-device:latest
+          securityContext:
+            privileged: true
+          imagePullPolicy: IfNotPresent
+          name: virtual-device
+          resources:
+            limits:
+              cpu: "500"
+              memory: 512Mi
+            requests:
+              cpu: 200m
+              memory: 128Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          env:
+            - name: CLOUDCORE_ADDRESS
+              value: 192-168-1-42.nip.io
+          volumeMounts:
+            - name: certs
+              mountPath: /etc/kubeedge/certs/node.key
+              subPath: node.key
+              readOnly: true
+            - name: certs
+              mountPath: /etc/kubeedge/certs/node.pem
+              subPath: node.pem
+              readOnly: true
+            - name: ca-cert
+              mountPath: /etc/kubeedge/certs/rootCa.pem
+              subPath: tls.crt
+              readOnly: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: certs
+          secret:
+            secretName: virtual-device-certs
+        - name: ca-cert
+          secret:
+            secretName: kubeedge-ca
