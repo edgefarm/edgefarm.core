@@ -29,7 +29,6 @@ commands:
       kubectl get ns ${KUBEEDGE_NS} &>/dev/null || kubectl create ns ${KUBEEDGE_NS}
       devspace run mkcert.create-ca-secret ${KUBEEDGE_CA} ${KUBEEDGE_SECRET} ${KUBEEDGE_NS}
 
-      [ ! -d "$(pwd)/dev/manifests/kubeedge/cloudcore/.certs" ] && mkdir -p "$(pwd)/dev/manifests/kubeedge/cloudcore/.certs"
       devspace run mkcert.create-cert ${KUBEEDGE_CA} \
         -cert-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.crt \
         -key-file $(pwd)/dev/manifests/kubeedge/cloudcore/.certs/server.key *.nip.io *.edgefarm.local cloudcore.kubeedge.svc.cluster.local
