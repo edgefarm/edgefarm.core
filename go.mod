@@ -3,6 +3,8 @@ module github.com/edgefarm/edgefarm.core
 go 1.18
 
 require (
+	github.com/loft-sh/vcluster v0.10.2
+	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/onsi/gomega v1.19.0
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2

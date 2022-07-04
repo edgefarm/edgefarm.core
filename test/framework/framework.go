@@ -51,7 +51,10 @@ func CreateFramework(ctx context.Context, scheme *runtime.Scheme) error {
 	}
 
 	ctrlClient, err := ctrlclient.New(restConfig, client.Options{})
-
+	if err != nil {
+		return err
+	}
+	
 	// create the framework
 	DefaultFramework = &Framework{
 		Context:       ctx,

@@ -7,9 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgefarm/edgefarm.core/test/e2e/framework"
+	"github.com/edgefarm/edgefarm.core/test/framework"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
+	// register tests
+	_ "github.com/edgefarm/edgefarm.core/test/e2e/daemonsets"
 )
 
 func TestKube(t *testing.T) {
