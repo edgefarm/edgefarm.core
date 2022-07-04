@@ -1,14 +1,6 @@
 version: v1beta11
 
 vars:
-  # kubeedge
-  - name: HOST_IP
-    question: What is the IP address of your host? (Prefer tailscale IP if available; run `tailscale ip -4`)?
-    default: "127.0.0.1"
-  - name: HOST_IP_NIP_IO
-    command: echo $(echo ${HOST_IP} | xargs).nip.io
-  - name: KUBEEDGE_CA
-    value: kubeedge
   # kind
   - name: KIND_CLUSTER_NAME
     value: kind-edgefarm-core
