@@ -2,6 +2,7 @@ package daemonsets
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/edgefarm/edgefarm.core/test/framework"
 	"github.com/loft-sh/vcluster/pkg/util/random"
@@ -9,6 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
@@ -28,7 +30,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		// use default framework
 		f = framework.DefaultFramework
 		iteration++
-		ns = fmt.Sprintf("e2e-pods-%d-%s", iteration, random.RandomString(5))
+		ns = fmt.Sprintf("e2e-ds-%d-%s", iteration, random.RandomString(5))
 
 		// create test namespace
 		_, err := f.ClientSet.CoreV1().Namespaces().Create(f.Context, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{
@@ -89,6 +91,15 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		err := f.ApplyOrUpdate(ds)
 		framework.ExpectNoError(err)
 
+		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+			dsl, err := f.ClientSet.AppsV1().DaemonSets(ns).List(f.Context, metav1.ListOptions{})
+			if err != nil {
+				return false, err
+			}
+			fmt.Printf("%v\n", dsl)
+			return false, nil
+		})
+		framework.ExpectNoError(err)
 	})
 
 })
