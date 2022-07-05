@@ -92,11 +92,30 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		framework.ExpectNoError(err)
 
 		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
-			dsl, err := f.ClientSet.AppsV1().DaemonSets(ns).List(f.Context, metav1.ListOptions{})
+			// dsl, err := f.ClientSet.AppsV1().DaemonSets(ns).List(f.Context, metav1.ListOptions{})
+			// if err != nil {
+			// 	return false, err
+			// }
+
+			// for _, ds := range dsl.Items {
+			// 	fmt.Printf("daemonset %s\n", ds.Name)
+			// 	for _, l := range ds.Labels {
+			// 		fmt.Printf(" label %v\n", l)
+			// 	}
+			// }
+			// return false, nil
+
+			pods, err := f.ClientSet.CoreV1().Pods(ns).List(f.Context, metav1.ListOptions{})
 			if err != nil {
 				return false, err
 			}
-			fmt.Printf("%v\n", dsl)
+
+			for _, pod := range pods.Items {
+				fmt.Printf("pod %s node=%s\n", pod.Name, pod.Spec.NodeName)
+				for k, v := range pod.Labels {
+					fmt.Printf(" label %v=%v\n", k, v)
+				}
+			}
 			return false, nil
 		})
 		framework.ExpectNoError(err)
