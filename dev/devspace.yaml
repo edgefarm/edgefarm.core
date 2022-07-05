@@ -72,3 +72,7 @@ commands:
   - name: update
     command: |-
       devspace update dependencies
+
+  - name: test
+    command: |-
+      cd ../test/e2e && ginkgo
