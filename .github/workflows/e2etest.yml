@@ -23,3 +23,5 @@ jobs:
       - name: setup test cluster
         run: |
           pwd
+          ls
+          cd dev && devspace run init && devspace deploy && devspace test
