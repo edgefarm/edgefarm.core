@@ -21,4 +21,5 @@ jobs:
           curl -sLS https://get.arkade.dev | sudo sh
           arkade get devspace kind kubectl helm kustomize mkcert yq
       - name: setup test cluster
+        run: |
           pwd
