@@ -24,4 +24,5 @@ jobs:
         run: |
           pwd
           ls
+          export PATH=$PATH:$HOME/.arkade/bin/
           cd dev && devspace run init && devspace deploy && devspace test
