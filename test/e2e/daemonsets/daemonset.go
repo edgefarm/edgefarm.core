@@ -3,6 +3,7 @@ package daemonsets
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/edgefarm/edgefarm.core/test/framework"
@@ -21,6 +22,7 @@ const (
 	initialNsLabelKey     = "testing-ns-label"
 	initialNsLabelValue   = "testing-ns-label-value"
 	nodeLabelKey          = "tagged"
+	edgeLabelKey          = "node-role.kubernetes.io/edge"
 )
 
 var _ = ginkgo.Describe("Daemonsets", func() {
@@ -75,7 +77,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 
 	ginkgo.It("Daemonset with labelselector starts pod on one node", func() {
 		for _, n := range nodes.Items {
-			_, ok := n.ObjectMeta.Labels["node-role.kubernetes.io/edge"]
+			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
 			if ok {
 				f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
 				break
@@ -96,7 +98,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 	ginkgo.It("Daemonset with labelselector starts pods on two nodes", func() {
 		i := 0
 		for _, n := range nodes.Items {
-			_, ok := n.ObjectMeta.Labels["node-role.kubernetes.io/edge"]
+			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
 			if ok {
 				f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
 				i++
@@ -115,6 +117,41 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
+	})
+
+	ginkgo.It("Daemonset Pod Logs are accessible", func() {
+		for _, n := range nodes.Items {
+			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
+			if ok {
+				f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
+				break
+			}
+		}
+
+		err := createDaemonSet(ns, map[string]string{
+			nodeLabelKey: "dontcare",
+		})
+		framework.ExpectNoError(err)
+
+		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
+		})
+		framework.ExpectNoError(err)
+
+		pods, err := f.ClientSet.CoreV1().Pods(ns).List(f.Context, metav1.ListOptions{})
+		framework.ExpectNoError(err)
+
+		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+			s, err := f.GetPodLog(pods.Items[0], 10)
+			framework.ExpectNoError(err)
+
+			if strings.Contains(s, "Hello"){
+				return true, nil
+			}
+			return false, nil
+		})
+		framework.ExpectNoError(err)
+
 	})
 
 })
@@ -149,7 +186,11 @@ func createDaemonSet(nameSpace string, nodeSelector map[string]string) error {
 							Name:            testingContainerName,
 							SecurityContext: f.GetDefaultSecurityContext(),
 							Image:           testingContainerImage,
-							Command:         []string{"sh", "-c", "echo Hello && sleep 3600"},
+							Command: []string{
+								"sh",
+								"-c",
+								"echo Hello && sleep 10 && echo Later && sleep 5 && echo MuchLater",
+							},
 						},
 					},
 					Tolerations: []corev1.Toleration{

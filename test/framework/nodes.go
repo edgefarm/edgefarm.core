@@ -3,6 +3,7 @@ package framework
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/retry"
 )
 
 // GetNodes returns a list of nodes in the cluster
@@ -13,8 +14,12 @@ func (f *Framework) GetNodes(options metav1.ListOptions) (*corev1.NodeList, erro
 }
 
 func (f *Framework) SetNodeLabel(node *corev1.Node, key string, value string) {
-	node.ObjectMeta.Labels[key] = value
-	_, err := f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
+
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		node.ObjectMeta.Labels[key] = value
+		_, err := f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
+		return err
+	})
 	ExpectNoError(err)
 }
 
@@ -23,8 +28,11 @@ func (f *Framework) RemoveNodeLabel(node *corev1.Node, key string) {
 	node, err := f.ClientSet.CoreV1().Nodes().Get(f.Context, node.Name, metav1.GetOptions{})
 	ExpectNoError(err)
 
-	delete(node.ObjectMeta.Labels, key)
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		delete(node.ObjectMeta.Labels, key)
 
-	_, err = f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
+		_, err = f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
+		return err
+	})
 	ExpectNoError(err)
 }
