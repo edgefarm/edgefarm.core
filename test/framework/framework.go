@@ -14,10 +14,8 @@ import (
 )
 
 const (
-	PollTimeout              = time.Minute
-	DefaultVclusterName      = "vcluster"
-	DefaultVclusterNamespace = "vcluster"
-	DefaultClientTimeout     = 32 * time.Second // the default in client-go is 32
+	PollTimeout          = time.Minute
+	DefaultClientTimeout = 32 * time.Second // the default in client-go is 32
 )
 
 var DefaultFramework = &Framework{}
@@ -30,6 +28,9 @@ type Framework struct {
 	// host kubernetes cluster were we are testing in
 	ClientSet *kubernetes.Clientset
 
+	// CtrlClient is the kubernetes client originally supposed
+	// to write controllers. It provides some convinience methods
+	// e.g. create objects
 	CtrlClient ctrlclient.Client
 
 	// Scheme is the global scheme to use
@@ -54,7 +55,7 @@ func CreateFramework(ctx context.Context, scheme *runtime.Scheme) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// create the framework
 	DefaultFramework = &Framework{
 		Context:       ctx,

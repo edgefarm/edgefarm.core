@@ -49,8 +49,3 @@ func ExpectEmpty(actual interface{}, explain ...interface{}) {
 func ExpectMatchRegexp(actual string, regexp string, explain ...interface{}) {
 	gomega.ExpectWithOffset(1, actual).To(gomega.MatchRegexp(regexp), explain...)
 }
-
-// ExpectMatchRegexp expects the string to match the provided regular expression
-// func Failf(format string, args ...interface{}) {
-// 	ginkgo.Fail(fmt.Sprintf(format, args...))
-// }

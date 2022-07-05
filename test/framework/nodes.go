@@ -13,17 +13,16 @@ func (f *Framework) GetNodes(options metav1.ListOptions) (*corev1.NodeList, erro
 	return nodes, err
 }
 
-func (f *Framework) SetNodeLabel(node *corev1.Node, key string, value string) {
-
+func (f *Framework) SetNodeLabel(node *corev1.Node, key string, value string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		node.ObjectMeta.Labels[key] = value
 		_, err := f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
 		return err
 	})
-	ExpectNoError(err)
+	return err
 }
 
-func (f *Framework) RemoveNodeLabel(node *corev1.Node, key string) {
+func (f *Framework) RemoveNodeLabel(node *corev1.Node, key string) error {
 
 	node, err := f.ClientSet.CoreV1().Nodes().Get(f.Context, node.Name, metav1.GetOptions{})
 	ExpectNoError(err)
@@ -34,5 +33,5 @@ func (f *Framework) RemoveNodeLabel(node *corev1.Node, key string) {
 		_, err = f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
 		return err
 	})
-	ExpectNoError(err)
+	return err
 }

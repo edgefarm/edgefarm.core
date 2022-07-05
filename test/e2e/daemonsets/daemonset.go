@@ -17,10 +17,9 @@ import (
 )
 
 const (
+	numNodes              = 4 // total nodes in cluster, must match cluster configuration!
 	testingContainerName  = "busybox"
 	testingContainerImage = "busybox:latest"
-	initialNsLabelKey     = "testing-ns-label"
-	initialNsLabelValue   = "testing-ns-label-value"
 	nodeLabelKey          = "tagged"
 	edgeLabelKey          = "node-role.kubernetes.io/edge"
 )
@@ -38,17 +37,12 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		iteration++
 		ns = fmt.Sprintf("e2e-ds-%d-%s", iteration, random.RandomString(5))
 
-		// create test namespace
-		_, err := f.ClientSet.CoreV1().Namespaces().Create(f.Context, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{
-			Name:   ns,
-			Labels: map[string]string{initialNsLabelKey: initialNsLabelValue},
-		}}, metav1.CreateOptions{})
-		framework.ExpectNoError(err)
-
+		framework.ExpectNoError(f.CreateTestNamespace(ns))
+		var err error
 		nodes, err = f.GetNodes(metav1.ListOptions{})
 		framework.ExpectNoError(err)
-		Expect(len(nodes.Items)).To(BeNumerically("==", 4))
 
+		Expect(len(nodes.Items)).To(BeNumerically("==", numNodes))
 	})
 	ginkgo.AfterEach(func() {
 		// delete test namespace
@@ -57,19 +51,18 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 
 		// remove test labels from nodes
 		for _, n := range nodes.Items {
-			f.RemoveNodeLabel(&n, nodeLabelKey)
+			framework.ExpectNoError(f.RemoveNodeLabel(&n, nodeLabelKey))
 		}
 	})
 
 	ginkgo.It("Daemonset with no labelselector starts pods on all nodes", func() {
 		for _, n := range nodes.Items {
-			f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
+			framework.ExpectNoError(f.SetNodeLabel(&n, nodeLabelKey, "dontcare"))
 		}
 
-		err := createDaemonSet(ns, map[string]string{})
-		framework.ExpectNoError(err)
+		framework.ExpectNoError(createDaemonSet(ns, map[string]string{}))
 
-		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -79,17 +72,16 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		for _, n := range nodes.Items {
 			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
 			if ok {
-				f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
+				framework.ExpectNoError(f.SetNodeLabel(&n, nodeLabelKey, "dontcare"))
 				break
 			}
 		}
 
-		err := createDaemonSet(ns, map[string]string{
+		framework.ExpectNoError(createDaemonSet(ns, map[string]string{
 			nodeLabelKey: "dontcare",
-		})
-		framework.ExpectNoError(err)
+		}))
 
-		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -100,7 +92,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		for _, n := range nodes.Items {
 			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
 			if ok {
-				f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
+				framework.ExpectNoError(f.SetNodeLabel(&n, nodeLabelKey, "dontcare"))
 				i++
 				if i == 2 {
 					break
@@ -108,12 +100,11 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 			}
 		}
 
-		err := createDaemonSet(ns, map[string]string{
+		framework.ExpectNoError(createDaemonSet(ns, map[string]string{
 			nodeLabelKey: "dontcare",
-		})
-		framework.ExpectNoError(err)
+		}))
 
-		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -123,17 +114,16 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		for _, n := range nodes.Items {
 			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
 			if ok {
-				f.SetNodeLabel(&n, nodeLabelKey, "dontcare")
+				framework.ExpectNoError(f.SetNodeLabel(&n, nodeLabelKey, "dontcare"))
 				break
 			}
 		}
 
-		err := createDaemonSet(ns, map[string]string{
+		framework.ExpectNoError(createDaemonSet(ns, map[string]string{
 			nodeLabelKey: "dontcare",
-		})
-		framework.ExpectNoError(err)
+		}))
 
-		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -145,13 +135,12 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 			s, err := f.GetPodLog(pods.Items[0], 10)
 			framework.ExpectNoError(err)
 
-			if strings.Contains(s, "Hello"){
+			if strings.Contains(s, "Hello") {
 				return true, nil
 			}
 			return false, nil
 		})
 		framework.ExpectNoError(err)
-
 	})
 
 })
@@ -239,7 +228,11 @@ func podsAreAppliedToAllSelectedNodes(nameSpace string, nodes *corev1.NodeList, 
 	sort.Strings(podNodes)
 	sort.Strings(taggedNodes)
 
-	fmt.Printf("podNodes: %v, taggedNodes: %v\n", podNodes, taggedNodes)
+	//fmt.Printf("podNodes: %v, taggedNodes: %v\n", podNodes, taggedNodes)
+
+	if len(taggedNodes) == 0 {
+		return false, fmt.Errorf("no tagged nodes")
+	}
 
 	if len(podNodes) > len(taggedNodes) {
 		return false, fmt.Errorf("too many pods started")
