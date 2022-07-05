@@ -1,0 +1,24 @@
+name: end-to-end-test
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - main
+      - beta
+      - e2e_test
+
+jobs:
+  e2etest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: setup tools
+        run: |
+          curl -sLS https://get.arkade.dev | sudo sh
+          arkade get devspace kind kubectl helm kustomize mkcert yq
+      - name: setup test cluster
+          pwd

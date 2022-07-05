@@ -22,5 +22,5 @@ func TestKube(t *testing.T) {
 	if err != nil {
 		log.Fatalf("Failed to create framework: %v", err)
 	}
-	ginkgo.RunSpecs(t, "Kube Suite")
+	ginkgo.RunSpecs(t, "edgefarm.core Suite")
 }
