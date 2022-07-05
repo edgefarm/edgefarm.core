@@ -27,24 +27,6 @@ dependencies:
       - name: KIND_CLUSTER_VERSION
         value: ${KIND_CLUSTER_VERSION}
 
-  - name: olm
-    source:
-      git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/olm
-      branch: v1.1.0
-
-  - name: helm-controller
-    source:
-      git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/helm-controller
-      branch: v1.1.0
-
-  - name: ingress
-    source:
-      git: https://github.com/edgefarm/devspace.base
-      subPath: /environments/ingress
-      branch: v1.1.0
-
   - name: virtual-edge-node
     source:
       git: https://github.com/edgefarm/virtual-edge-node
@@ -55,10 +37,6 @@ commands:
     command: |-
       devspace run update
       devspace run kind.init
-      devspace run helm-controller.install
-      devspace run ingress.init
-      devspace run olm.install
-      devspace run ingress.install
       devspace run edgefarm-core.init
 
   - name: purge
