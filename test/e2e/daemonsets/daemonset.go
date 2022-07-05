@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edgefarm/edgefarm.core/test/framework"
+	"github.com/edgefarm/edgefarm.core/test/pkg/framework"
 	"github.com/loft-sh/vcluster/pkg/util/random"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,6 +22,7 @@ const (
 	testingContainerImage = "busybox:latest"
 	nodeLabelKey          = "tagged"
 	edgeLabelKey          = "node-role.kubernetes.io/edge"
+	dsPollTimeout         = time.Minute * 5
 )
 
 var _ = ginkgo.Describe("Daemonsets", func() {
@@ -62,7 +63,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 
 		framework.ExpectNoError(createDaemonSet(ns, map[string]string{}))
 
-		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, dsPollTimeout, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -81,7 +82,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 			nodeLabelKey: "dontcare",
 		}))
 
-		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, dsPollTimeout, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -104,7 +105,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 			nodeLabelKey: "dontcare",
 		}))
 
-		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, dsPollTimeout, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -123,7 +124,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 			nodeLabelKey: "dontcare",
 		}))
 
-		err := wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err := wait.PollImmediate(time.Second, dsPollTimeout, func() (bool, error) {
 			return podsAreAppliedToAllSelectedNodes(ns, nodes, nodeLabelKey)
 		})
 		framework.ExpectNoError(err)
@@ -131,7 +132,7 @@ var _ = ginkgo.Describe("Daemonsets", func() {
 		pods, err := f.ClientSet.CoreV1().Pods(ns).List(f.Context, metav1.ListOptions{})
 		framework.ExpectNoError(err)
 
-		err = wait.PollImmediate(time.Second, time.Hour, func() (bool, error) {
+		err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 			s, err := f.GetPodLog(pods.Items[0], 10)
 			framework.ExpectNoError(err)
 
@@ -178,7 +179,7 @@ func createDaemonSet(nameSpace string, nodeSelector map[string]string) error {
 							Command: []string{
 								"sh",
 								"-c",
-								"echo Hello && sleep 10 && echo Later && sleep 5 && echo MuchLater",
+								"echo Hello && sleep 10 && echo Later && sleep 5 && echo MuchLater && sleep 3600",
 							},
 						},
 					},

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgefarm/edgefarm.core/test/framework"
+	"github.com/edgefarm/edgefarm.core/test/pkg/framework"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
