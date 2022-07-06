@@ -15,8 +15,14 @@ func (f *Framework) GetNodes(options metav1.ListOptions) (*corev1.NodeList, erro
 
 func (f *Framework) SetNodeLabel(node *corev1.Node, key string, value string) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		node.ObjectMeta.Labels[key] = value
-		_, err := f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
+		n, err := f.ClientSet.CoreV1().Nodes().Get(f.Context, node.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		n.ObjectMeta.Labels[key] = value
+
+		_, err = f.ClientSet.CoreV1().Nodes().Update(f.Context, n, metav1.UpdateOptions{})
 		return err
 	})
 	return err
@@ -24,13 +30,15 @@ func (f *Framework) SetNodeLabel(node *corev1.Node, key string, value string) er
 
 func (f *Framework) RemoveNodeLabel(node *corev1.Node, key string) error {
 
-	node, err := f.ClientSet.CoreV1().Nodes().Get(f.Context, node.Name, metav1.GetOptions{})
-	ExpectNoError(err)
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		n, err := f.ClientSet.CoreV1().Nodes().Get(f.Context, node.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
 
-	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		delete(node.ObjectMeta.Labels, key)
+		delete(n.ObjectMeta.Labels, key)
 
-		_, err = f.ClientSet.CoreV1().Nodes().Update(f.Context, node, metav1.UpdateOptions{})
+		_, err = f.ClientSet.CoreV1().Nodes().Update(f.Context, n, metav1.UpdateOptions{})
 		return err
 	})
 	return err

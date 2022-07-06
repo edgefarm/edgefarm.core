@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	numNodes              = 4 // total nodes in cluster, must match cluster configuration!
+	numNodes              = 5 // total nodes in cluster, must match cluster configuration!
 	testingContainerName  = "busybox"
 	testingContainerImage = "busybox:latest"
 	nodeLabelKey          = "tagged"
@@ -217,8 +217,11 @@ func podsAreAppliedToAllSelectedNodes(nameSpace string, nodes *corev1.NodeList, 
 	}
 
 	// get list of tagged nodes
+	nods, err := f.GetNodes(metav1.ListOptions{})
+	framework.ExpectNoError(err)
+
 	taggedNodes := make([]string, 0)
-	for _, n := range nodes.Items {
+	for _, n := range nods.Items {
 		_, ok := n.ObjectMeta.Labels[labelKey]
 		if ok {
 			taggedNodes = append(taggedNodes, n.Name)
