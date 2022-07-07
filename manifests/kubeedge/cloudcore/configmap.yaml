@@ -49,3 +49,6 @@ data:
         enable: false
       router:
         enable: false
+      iptablesManager:
+        enable: true
+        mode: external
