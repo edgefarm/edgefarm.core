@@ -37,6 +37,8 @@ commands:
     command: |-
       devspace run update
       devspace run kind.init
+      # remove taint `node-role.kubernetes.io/master:NoSchedule` from all control-plane nodes
+      kubectl taint nodes -l node-role.kubernetes.io/control-plane= node-role.kubernetes.io/master:NoSchedule-
       devspace run edgefarm-core.init
 
   - name: purge
