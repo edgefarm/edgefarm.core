@@ -1,10 +1,14 @@
 package framework
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 )
+
+const edgeLabelKey = "node-role.kubernetes.io/edge"
 
 // GetNodes returns a list of nodes in the cluster
 // use options to filter nodes e.g. by label
@@ -42,4 +46,55 @@ func (f *Framework) RemoveNodeLabel(node *corev1.Node, key string) error {
 		return err
 	})
 	return err
+}
+
+func (f *Framework) NodeIsReady(n *corev1.Node) bool {
+	for _, c := range n.Status.Conditions {
+		if c.Type == "Ready" {
+			return c.Status == corev1.ConditionTrue
+		}
+	}
+	return false
+}
+
+func (f *Framework) LabelReadyEdgeNodes(nameSpace string, numNodes int, labelKey string) error {
+	nodes, err := f.GetNodes(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	i := 0
+	for _, n := range nodes.Items {
+		if f.NodeIsReady(&n) {
+			_, ok := n.ObjectMeta.Labels[edgeLabelKey]
+			if ok {
+				err := f.SetNodeLabel(&n, labelKey, "")
+				if err != nil {
+					return err
+				}
+				i++
+				if i == numNodes {
+					break
+				}
+			}
+		}
+	}
+	if i < numNodes {
+		return fmt.Errorf("cannot tag requested number of nodes")
+	}
+	return nil
+}
+
+func (f *Framework) RemoveNodeLabels(labelKey string) error {
+	nodes, err := f.GetNodes(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	// remove test labels from nodes
+	for _, n := range nodes.Items {
+		err := f.RemoveNodeLabel(&n, labelKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
