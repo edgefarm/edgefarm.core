@@ -98,3 +98,19 @@ func (f *Framework) RemoveNodeLabels(labelKey string) error {
 	}
 	return nil
 }
+
+func (f *Framework) GetTaggedNode(labelKey string) ([]string, error) {
+	taggedNodes := make([]string, 0)
+	nods, err := f.GetNodes(metav1.ListOptions{})
+	if err != nil {
+		return taggedNodes, err
+	}
+
+	for _, n := range nods.Items {
+		_, ok := n.ObjectMeta.Labels[labelKey]
+		if ok {
+			taggedNodes = append(taggedNodes, n.Name)
+		}
+	}
+	return taggedNodes, nil
+}

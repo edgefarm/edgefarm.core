@@ -18,3 +18,12 @@ func (f *Framework) SetSecret(nameSpace string, secretName string, key string, v
 	}, metav1.CreateOptions{})
 	ExpectNoError(err)
 }
+
+// GetSecret from Kubernetes
+func (f *Framework) GetSecret(nameSpace string, secretName string) (string, error) {
+	secret, err := f.ClientSet.CoreV1().Secrets(nameSpace).Get(f.Context, secretName, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	return secret.StringData["password"], nil
+}
