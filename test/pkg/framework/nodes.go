@@ -99,7 +99,7 @@ func (f *Framework) RemoveNodeLabels(labelKey string) error {
 	return nil
 }
 
-func (f *Framework) GetTaggedNode(labelKey string) ([]string, error) {
+func (f *Framework) GetTaggedNodes(labelKey string) ([]string, error) {
 	taggedNodes := make([]string, 0)
 	nods, err := f.GetNodes(metav1.ListOptions{})
 	if err != nil {
